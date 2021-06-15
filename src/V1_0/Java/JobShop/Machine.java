@@ -7,7 +7,7 @@ import java.util.*;
 /**
  * :name=V1_0.Java.JobShop;
  */
-// line 3 "../umpleFile.ump"
+// line 3 "../../../umpleFile.ump"
 public class Machine
 {
 

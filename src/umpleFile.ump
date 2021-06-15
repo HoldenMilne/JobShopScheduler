@@ -1,4 +1,4 @@
-namespace JobShop;//:name=V1_0.Java.JobShop;
+namespace V1_0.Java.JobShop;//:name=V1_0.Java.JobShop;
 
 class Machine {
     1 -- * Job;
@@ -34,7 +34,7 @@ class Shop {
     1 -- 1..* Floor;
 }
 
-namespace Scheduling;
+namespace V1_0.Java.Scheduling;
 
 class Schedule
 {
@@ -57,10 +57,13 @@ class Scheduler
 
 }
 
-namespace Parsing;
+namespace V1_0.Java.Parsing;
 
 class ScheduleStreamParser
 {
+    depend V1_0.Java.Scheduling.Schedule;
+    depend V1_0.Java.Scheduling.ScheduleStream;
+    depend java.util.stream.Stream;
     // non-static to allow for multiple threads/instances?
     public static Schedule ParseStream(Stream stream)
     {

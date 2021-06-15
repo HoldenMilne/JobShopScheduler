@@ -5,7 +5,7 @@ package V1_0.Java.JobShop;
 import java.util.*;
 import V1_0.Java.Scheduling.*;
 
-// line 10 "../umpleFile.ump"
+// line 10 "../../../umpleFile.ump"
 public class Job
 {
 
