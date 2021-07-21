@@ -1,18 +1,52 @@
-namespace V1_0.Java.JobShop;//:name=V1_0.Java.JobShop;
-
+namespace V1_0.Java.JobShop;
 class Machine {
-    1 -- * Job;
-
+    * -> * Job;
+    Job activeJob;
     String name;
-    int id;
+    autounique id;
+
+    lazy boolean isRunning;
+    status{
+        Stopped {
+            onStart -> Running;
+            entry/{isRunning = false;}
+        } // Has a job but needs to be started
+        Running{
+            onError -> Errored;
+            completeRun -> Idle;
+        } // the machine is processing a job
+        Idle {
+            startChangeOver -> InChangeOver;
+        } // the machine is has completed a job a requires changeover
+        InChangeOver {
+            changeOverDone [hasNextJob()] -> Stopped;
+            changeOverDone [!hasNextJob()] -> Finished;} // the machine is currently undergoing a changeover
+        Finished {
+            nextJobLoaded -> Stopped;
+        } // the machine has finished a job, has finished a changeover and has no jobs left to run
+        Errored{
+            errorResolved -> Paused;
+        } // an error has occurred.
+        Paused {
+            onResume -> Running;
+        }
+    }
+
+    boolean hasNextJob(){
+        return activeJob.getNextJob()!=null && activeJob.getNextJob()!=Job.DummyJob;
+    }
 }
 
 class Job {
+    const Job DummyJob = new Job("dummy", Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY,Integer.MIN_VALUE,null);
     String name;
-    int id;
+    autounique id;
     float timeToCompletion;
     float changeOverTime;
     int priority;
+    float total = {getChangeOverTime() + getTimeToCompletion()}
+    Job nextJob;
+
 }
 
 class Operator {
@@ -21,9 +55,30 @@ class Operator {
 
     String name;
     int id;
+
+    status {
+        Idle {
+            hasJobToService -> Inbound;
+            noJobToService -> Idle;
+            errorDetected -> Inbound;
+            entry/checkMachineToService();
+        }
+
+        Inbound {
+            atTargetMachine -> Servicing;
+            entry/moveToMachine();
+        }
+
+        Servicing {
+            complete -> Idle;
+            exit/StartMachine();
+            entry/StartServicing();
+        }
+    }
 }
 
 class Floor {
+    depend V1_0.Java.Scheduling.*;
     1 -- * Machine;
 
     String name;
@@ -38,40 +93,106 @@ namespace V1_0.Java.Scheduling;
 
 class Schedule
 {
-
-
-}
-association {
-    1..* Schedule s <@>- 1..* Job j;
+    depend V1_0.Java.JobShop.Machine;
+    1 -- 1..* Machine machines;
 }
 
-class ScheduleStream
+class OutputSchedule
 {
-
+    isA Schedule;
+    depend V1_0.Java.JobShop.*;
+    depend java.util.stream.*;
+    public List<Machine> asMachineList()
+    {
+        return machines;
+    }
+    public List<Job> asJobList()
+    {
+        return machines.stream().map(machine -> machine.getActiveJob()).collect(Collectors.toList());
+    }
 
 }
+class InputSchedule
+{
+    isA Schedule;
+
+    depend java.io.File;
+    public InputSchedule CreateFromCsv(File file){
+
+    return null;
+    }
+
+    public InputSchedule CreateFromJson(File file){
+
+    return null;
+    }
+
+    public InputSchedule CreateFromXml(File file){
+
+    return null;
+    }
+}
+
 
 class Scheduler
 {
+    depend V1_0.Java.JobShop.*;
+    depend java.util.*;
 
-
-}
-
-namespace V1_0.Java.Parsing;
-
-class ScheduleStreamParser
-{
-    depend V1_0.Java.Scheduling.Schedule;
-    depend V1_0.Java.Scheduling.ScheduleStream;
-    depend java.util.stream.Stream;
-    // non-static to allow for multiple threads/instances?
-    public static Schedule ParseStream(Stream stream)
-    {
-        return null; // parse to a schedule??
+    enum PivotSelection{
+        LARGEST_TTC,LARGEST_TOT,SMALLEST_TTC,SMALLEST_TOT,NONE
     }
 
-    public static Schedule ParseStream(ScheduleStream stream)
+    PivotSelection firstPivotSelectionMode;
+    PivotSelection secondPivotSelectionMode;
+
+    before setFirstPivotSelectionMode
     {
-        return null; // parse to a schedule??
+        if(aFirstPivotSelectionMode==PivotSelection.NONE)
+            aFirstPivotSelectionMode = PivotSelection.SMALLEST_TOT;
+    }
+    before setSecondPivotSelectionMode
+    {
+        if(aSecondPivotSelectionMode==PivotSelection.NONE)
+            aSecondPivotSelectionMode = firstPivotSelectionMode;
+    }
+
+    //implement first alg here
+    private OutputSchedule GreedyPriorityScheduler(List<Job> activeJobs)
+    {
+        List<Job> finalList = new ArrayList<Job>();
+        return null; // return final list as output schedule
+    }
+
+    //implement second alg here
+    private List<Job> SchedulerRecursion(List<Job> activeJobs)
+    {
+        return null;
+    }
+
+    public Machine NextMachineToService(InputSchedule s)
+    {
+        return NextMachinesToService(s,1).asMachineList().get(0);
+    }
+
+    public OutputSchedule GetFullServiceOrder(InputSchedule s)
+    {
+        return NextMachinesToService(s,s.getMachines().size());
+    }
+
+    public OutputSchedule NextMachinesToService(InputSchedule s,int nMachines)
+    {
+        List<Job> activeJobs = GetActiveJobList(s); // extract the active jobs from the machines
+        return GreedyPriorityScheduler(activeJobs);
+    }
+
+    private List<Job> GetActiveJobList(InputSchedule s)
+    {
+        List<Job> activeJobs = new ArrayList<Job>();
+        for(Machine m : s.getMachines())
+        {
+            activeJobs.add(m.getActiveJob());
+        }
+        return activeJobs;
     }
 }

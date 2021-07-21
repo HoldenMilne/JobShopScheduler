@@ -2,10 +2,11 @@
 /*This code was generated using the UMPLE 1.30.2.5248.dba0a5744 modeling language!*/
 
 package V1_0.Java.Scheduling;
+import V1_0.Java.JobShop.Machine;
 import java.util.*;
 import V1_0.Java.JobShop.*;
 
-// line 39 "../../../umpleFile.ump"
+// line 64 "../../../umpleFile.ump"
 public class Schedule
 {
 
@@ -14,7 +15,7 @@ public class Schedule
   //------------------------
 
   //Schedule Associations
-  private List<Job> j;
+  private List<Machine> machines;
 
   //------------------------
   // CONSTRUCTOR
@@ -22,186 +23,142 @@ public class Schedule
 
   public Schedule()
   {
-    j = new ArrayList<Job>();
+    machines = new ArrayList<Machine>();
   }
 
   //------------------------
   // INTERFACE
   //------------------------
   /* Code from template association_GetMany */
-  public Job getJ(int index)
+  public Machine getMachine(int index)
   {
-    Job aJ = j.get(index);
-    return aJ;
+    Machine aMachine = machines.get(index);
+    return aMachine;
   }
 
-  public List<Job> getJ()
+  public List<Machine> getMachines()
   {
-    List<Job> newJ = Collections.unmodifiableList(j);
-    return newJ;
+    List<Machine> newMachines = Collections.unmodifiableList(machines);
+    return newMachines;
   }
 
-  public int numberOfJ()
+  public int numberOfMachines()
   {
-    int number = j.size();
+    int number = machines.size();
     return number;
   }
 
-  public boolean hasJ()
+  public boolean hasMachines()
   {
-    boolean has = j.size() > 0;
+    boolean has = machines.size() > 0;
     return has;
   }
 
-  public int indexOfJ(Job aJ)
+  public int indexOfMachine(Machine aMachine)
   {
-    int index = j.indexOf(aJ);
+    int index = machines.indexOf(aMachine);
     return index;
   }
   /* Code from template association_IsNumberOfValidMethod */
-  public boolean isNumberOfJValid()
+  public boolean isNumberOfMachinesValid()
   {
-    boolean isValid = numberOfJ() >= minimumNumberOfJ();
+    boolean isValid = numberOfMachines() >= minimumNumberOfMachines();
     return isValid;
   }
   /* Code from template association_MinimumNumberOfMethod */
-  public static int minimumNumberOfJ()
+  public static int minimumNumberOfMachines()
   {
     return 1;
   }
-  /* Code from template association_AddManyToManyMethod */
-  public boolean addJ(Job aJ)
+  /* Code from template association_AddMandatoryManyToOne */
+  public Machine addMachine(Job aActiveJob, String aName, Floor aFloor)
+  {
+    Machine aNewMachine = new Machine(aActiveJob, aName, aFloor, this);
+    return aNewMachine;
+  }
+
+  public boolean addMachine(Machine aMachine)
   {
     boolean wasAdded = false;
-    if (j.contains(aJ)) { return false; }
-    j.add(aJ);
-    if (aJ.indexOfS(this) != -1)
+    if (machines.contains(aMachine)) { return false; }
+    Schedule existingSchedule = aMachine.getSchedule();
+    boolean isNewSchedule = existingSchedule != null && !this.equals(existingSchedule);
+
+    if (isNewSchedule && existingSchedule.numberOfMachines() <= minimumNumberOfMachines())
     {
-      wasAdded = true;
+      return wasAdded;
+    }
+    if (isNewSchedule)
+    {
+      aMachine.setSchedule(this);
     }
     else
     {
-      wasAdded = aJ.addS(this);
-      if (!wasAdded)
-      {
-        j.remove(aJ);
-      }
+      machines.add(aMachine);
     }
+    wasAdded = true;
     return wasAdded;
   }
-  /* Code from template association_AddMStarToMany */
-  public boolean removeJ(Job aJ)
+
+  public boolean removeMachine(Machine aMachine)
   {
     boolean wasRemoved = false;
-    if (!j.contains(aJ))
+    //Unable to remove aMachine, as it must always have a schedule
+    if (this.equals(aMachine.getSchedule()))
     {
       return wasRemoved;
     }
 
-    if (numberOfJ() <= minimumNumberOfJ())
+    //schedule already at minimum (1)
+    if (numberOfMachines() <= minimumNumberOfMachines())
     {
       return wasRemoved;
     }
 
-    int oldIndex = j.indexOf(aJ);
-    j.remove(oldIndex);
-    if (aJ.indexOfS(this) == -1)
-    {
-      wasRemoved = true;
-    }
-    else
-    {
-      wasRemoved = aJ.removeS(this);
-      if (!wasRemoved)
-      {
-        j.add(oldIndex,aJ);
-      }
-    }
+    machines.remove(aMachine);
+    wasRemoved = true;
     return wasRemoved;
   }
-  /* Code from template association_SetMStarToMany */
-  public boolean setJ(Job... newJ)
-  {
-    boolean wasSet = false;
-    ArrayList<Job> verifiedJ = new ArrayList<Job>();
-    for (Job aJ : newJ)
-    {
-      if (verifiedJ.contains(aJ))
-      {
-        continue;
-      }
-      verifiedJ.add(aJ);
-    }
-
-    if (verifiedJ.size() != newJ.length || verifiedJ.size() < minimumNumberOfJ())
-    {
-      return wasSet;
-    }
-
-    ArrayList<Job> oldJ = new ArrayList<Job>(j);
-    j.clear();
-    for (Job aNewJ : verifiedJ)
-    {
-      j.add(aNewJ);
-      if (oldJ.contains(aNewJ))
-      {
-        oldJ.remove(aNewJ);
-      }
-      else
-      {
-        aNewJ.addS(this);
-      }
-    }
-
-    for (Job anOldJ : oldJ)
-    {
-      anOldJ.removeS(this);
-    }
-    wasSet = true;
-    return wasSet;
-  }
   /* Code from template association_AddIndexControlFunctions */
-  public boolean addJAt(Job aJ, int index)
+  public boolean addMachineAt(Machine aMachine, int index)
   {  
     boolean wasAdded = false;
-    if(addJ(aJ))
+    if(addMachine(aMachine))
     {
       if(index < 0 ) { index = 0; }
-      if(index > numberOfJ()) { index = numberOfJ() - 1; }
-      j.remove(aJ);
-      j.add(index, aJ);
+      if(index > numberOfMachines()) { index = numberOfMachines() - 1; }
+      machines.remove(aMachine);
+      machines.add(index, aMachine);
       wasAdded = true;
     }
     return wasAdded;
   }
 
-  public boolean addOrMoveJAt(Job aJ, int index)
+  public boolean addOrMoveMachineAt(Machine aMachine, int index)
   {
     boolean wasAdded = false;
-    if(j.contains(aJ))
+    if(machines.contains(aMachine))
     {
       if(index < 0 ) { index = 0; }
-      if(index > numberOfJ()) { index = numberOfJ() - 1; }
-      j.remove(aJ);
-      j.add(index, aJ);
+      if(index > numberOfMachines()) { index = numberOfMachines() - 1; }
+      machines.remove(aMachine);
+      machines.add(index, aMachine);
       wasAdded = true;
     } 
     else 
     {
-      wasAdded = addJAt(aJ, index);
+      wasAdded = addMachineAt(aMachine, index);
     }
     return wasAdded;
   }
 
   public void delete()
   {
-    while (j.size() > 0)
+    for(int i=machines.size(); i > 0; i--)
     {
-      Job aJ = j.get(j.size() - 1);
-      aJ.delete();
-      j.remove(aJ);
+      Machine aMachine = machines.get(i - 1);
+      aMachine.delete();
     }
-    
   }
 
 }

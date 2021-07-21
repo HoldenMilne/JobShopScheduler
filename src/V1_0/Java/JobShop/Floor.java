@@ -2,9 +2,10 @@
 /*This code was generated using the UMPLE 1.30.2.5248.dba0a5744 modeling language!*/
 
 package V1_0.Java.JobShop;
+import V1_0.Java.Scheduling.*;
 import java.util.*;
 
-// line 26 "../../../umpleFile.ump"
+// line 50 "../../../umpleFile.ump"
 public class Floor
 {
 
@@ -130,9 +131,9 @@ public class Floor
     return 0;
   }
   /* Code from template association_AddManyToOne */
-  public Machine addMachine(String aName, int aId)
+  public Machine addMachine(Job aActiveJob, String aName, Schedule aSchedule)
   {
-    return new Machine(aName, aId, this);
+    return new Machine(aActiveJob, aName, this, aSchedule);
   }
 
   public boolean addMachine(Machine aMachine)
